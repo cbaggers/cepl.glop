@@ -43,8 +43,8 @@
 
 ;;----------------------------------------------------------------------
 
-(defun glop-swap ()
-  (glop:swap-buffers %win))
+(defun glop-swap (win)
+  (glop:swap-buffers win))
 
 ;;----------------------------------------------------------------------
 ;; tell cepl what to use
