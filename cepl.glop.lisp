@@ -37,7 +37,7 @@
 ;;----------------------------------------------------------------------
 ;; event stub
 
-(defun collect-glop-events (win)
+(defun collect-glop-events (win &optional tpref)
   (loop :for event := (glop:next-event win :blocking nil) :while event
      :do (typecase event (glop:close-event (cepl.host:shutdown)))))
 
