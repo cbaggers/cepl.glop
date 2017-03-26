@@ -15,16 +15,16 @@
   (destructuring-bind (&optional major minor)
       (when gl-version (cepl.context:split-float-version gl-version))
     (let ((win (glop:create-window
-		title width height :major major :minor minor
-		:fullscreen fullscreen :double-buffer double-buffer
-		:red-size red-size :green-size green-size :blue-size blue-size
-		:alpha-size alpha-size :depth-size depth-size
-		:stencil-size stencil-size)))
+                title width height :major major :minor minor
+                :fullscreen fullscreen :double-buffer double-buffer
+                :red-size red-size :green-size green-size :blue-size blue-size
+                :alpha-size alpha-size :depth-size depth-size
+                :stencil-size stencil-size)))
       (setf %win win)
       (setf cl-opengl-bindings::*gl-get-proc-address*
-	    #'glop:gl-get-proc-address)
+            #'glop:gl-get-proc-address)
       (list (slot-value win 'glop::gl-context)
-	    win))))
+            win))))
 
 (defmethod cepl.host:shutdown ()
   (glop:destroy-window %win))
@@ -47,7 +47,14 @@
   (glop:swap-buffers win))
 
 ;;----------------------------------------------------------------------
+;; window size
+
+(defun glop-win-size (win-handle)
+  (list (glop:window-width win-handle) (glop:window-height win-handle)))
+
+;;----------------------------------------------------------------------
 ;; tell cepl what to use
 
 (set-step-func #'collect-glop-events)
 (set-swap-func #'glop-swap)
+(set-window-size-func #'glop-win-size)
