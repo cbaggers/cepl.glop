@@ -1,4 +1,4 @@
 ;;;; package.lisp
 
-(defpackage #:cepl.glop
-  (:use :cl :cepl.host))
+(uiop:define-package #:cepl.glop
+    (:use :cl :cepl.host))

@@ -1,45 +1,65 @@
 (in-package :cepl.glop)
 
-(defvar %win nil)
+;;======================================================================
+;; api v1
 
-(defmethod cepl.host:init (&optional (init-flags :everything))
-  (declare (ignore init-flags))
-  t)
-
-(defmethod cepl.host:request-context
-    (width height title fullscreen
-     no-frame alpha-size depth-size stencil-size
-     red-size green-size blue-size buffer-size
-     double-buffer hidden resizable gl-version)
-  "Initializes the backend and returns a list containing: (context window)"
-  (destructuring-bind (&optional major minor)
-      (when gl-version (cepl.context:split-float-version gl-version))
-    (let ((win (glop:create-window
-                title width height :major major :minor minor
-                :fullscreen fullscreen :double-buffer double-buffer
-                :red-size red-size :green-size green-size :blue-size blue-size
-                :alpha-size alpha-size :depth-size depth-size
-                :stencil-size stencil-size)))
-      (setf %win win)
-      (setf cl-opengl-bindings::*gl-get-proc-address*
-            #'glop:gl-get-proc-address)
-      (list (slot-value win 'glop::gl-context)
-            win))))
-
-(defmethod cepl.host:shutdown ()
-  (glop:destroy-window %win))
-
-
-(defmethod set-primary-thread-and-run (func &rest args)
-  (when func
-    (error "set-primary-thread-and-run not implemented for glop")))
+(let ((listeners nil))
+  (defun glop-register-listener (func)
+    (push func listeners))
+  (defun glop-step-v1 (win)
+    (loop :for event := (glop:next-event win :blocking nil) :while event :do
+       (progn
+         (loop :for listener :in listeners :do
+            (funcall listener event))
+         (when (typep event 'glop:close-event)
+           (cepl:quit))))))
 
 ;;----------------------------------------------------------------------
-;; event stub
 
-(defun collect-glop-events (win &optional tpref)
-  (loop :for event := (glop:next-event win :blocking nil) :while event
-     :do (typecase event (glop:close-event (cepl.host:shutdown)))))
+(defun make-glop-context (surface version width height title fullscreen
+                          no-frame alpha-size depth-size stencil-size
+                          red-size green-size blue-size buffer-size
+                          double-buffer hidden resizable)
+  (declare (ignore width height title fullscreen no-frame alpha-size depth-size
+                   stencil-size red-size green-size blue-size buffer-size
+                   double-buffer hidden resizable))
+  (destructuring-bind (&optional major minor)
+      (when version (cepl.context:split-float-version version))
+    (glop:create-gl-context surface :major major :minor minor
+                            :make-current t)))
+
+(defun glop-make-current (context surface)
+  (glop:attach-gl-context surface context))
+
+;;----------------------------------------------------------------------
+;; Surface
+
+(defun make-glop-surface (width height title fullscreen
+                          no-frame alpha-size depth-size stencil-size
+                          red-size green-size blue-size buffer-size
+                          double-buffer hidden resizable)
+  (declare (ignore no-frame resizable buffer-size))
+  (let ((win (make-instance 'glop::win-class)))
+    (glop:open-window win title width height
+                      :double-buffer double-buffer
+                      :red-size red-size
+                      :green-size green-size
+                      :blue-size blue-size
+                      :alpha-size alpha-size
+                      :depth-size depth-size
+                      :stencil-buffer (when stencil-size t)
+                      :stencil-size stencil-size)
+    (if hidden
+        (glop:hide-window win)
+        (glop:show-window win))
+    (glop:set-fullscreen win fullscreen)
+    win))
+
+(defun destroy-glop-surface (surface)
+  (glop:close-window surface))
+
+(defun glop-surface-size (win-handle)
+  (list (glop:window-width win-handle) (glop:window-height win-handle)))
 
 ;;----------------------------------------------------------------------
 
@@ -47,14 +67,31 @@
   (glop:swap-buffers win))
 
 ;;----------------------------------------------------------------------
-;; window size
 
-(defun glop-win-size (win-handle)
-  (list (glop:window-width win-handle) (glop:window-height win-handle)))
+(defclass glop-api (cepl.host:api-1)
+  (;;
+   (supports-multiple-contexts-p :initform nil)
+   ;;
+   (supports-multiple-surfaces-p :initform t)
+   ;;
+   (init-function :initform (lambda (&key &allow-other-keys)))
+   ;;
+   (shutdown-function :initform (lambda ()))
+   ;;
+   (make-surface-function :initform #'make-glop-surface)
+   ;;
+   (destroy-surface-function :initform #'destroy-glop-surface)
+   ;;
+   (make-context-function :initform #'make-glop-context)
+   ;;
+   (step-function :initform #'glop-step-v1)
+   ;;
+   (register-event-callback-function :initform #'glop-register-listener)
+   ;;
+   (swap-function :initform #'glop-swap)
+   ;;
+   (surface-size-function :initform #'glop-surface-size)
+   ;;
+   (make-context-current-function :initform #'glop-make-current)))
 
-;;----------------------------------------------------------------------
-;; tell cepl what to use
-
-(set-step-func #'collect-glop-events)
-(set-swap-func #'glop-swap)
-(set-window-size-func #'glop-win-size)
+(register-host 'glop-api)
