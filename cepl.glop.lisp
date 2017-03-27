@@ -29,7 +29,14 @@
                             :make-current t)))
 
 (defun glop-make-current (context surface)
+  (glop:detach-gl-context context)
   (glop:attach-gl-context surface context))
+
+;; X Error of failed request:  GLXBadDrawable
+;;   Major opcode of failed request:  155 (GLX)
+;;   Minor opcode of failed request:  11 (X_GLXSwapBuffers)
+;;   Serial number of failed request:  35
+;;   Current serial number in output stream:  36
 
 ;;----------------------------------------------------------------------
 ;; Surface
