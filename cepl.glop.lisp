@@ -39,7 +39,7 @@
                           red-size green-size blue-size buffer-size
                           double-buffer hidden resizable)
   (declare (ignore no-frame resizable buffer-size))
-  (let ((win (make-instance 'glop::win-class)))
+  (let ((win (make-instance 'glop:window)))
     (glop:open-window win title width height
                       :double-buffer double-buffer
                       :red-size red-size
