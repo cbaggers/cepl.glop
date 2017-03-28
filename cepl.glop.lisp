@@ -16,13 +16,11 @@
 
 ;;----------------------------------------------------------------------
 
-(defun make-glop-context (surface version width height title fullscreen
-                          no-frame alpha-size depth-size stencil-size
-                          red-size green-size blue-size buffer-size
-                          double-buffer hidden resizable)
-  (declare (ignore width height title fullscreen no-frame alpha-size depth-size
-                   stencil-size red-size green-size blue-size buffer-size
-                   double-buffer hidden resizable))
+(defun make-glop-context (surface version double-buffer
+                          alpha-size depth-size stencil-size buffer-size
+                          red-size green-size blue-size)
+  (declare (ignore alpha-size depth-size double-buffer
+                   stencil-size red-size green-size blue-size buffer-size))
   (destructuring-bind (&optional major minor)
       (when version (cepl.context:split-float-version version))
     (glop:create-gl-context surface :major major :minor minor
