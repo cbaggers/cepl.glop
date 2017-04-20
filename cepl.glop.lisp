@@ -63,8 +63,28 @@
 (defun destroy-glop-surface (surface)
   (glop:close-window surface))
 
-(defun glop-surface-size (win-handle)
-  (list (glop:window-width win-handle) (glop:window-height win-handle)))
+(defun glop-surface-size (surface)
+  (list (glop:window-width surface) (glop:window-height surface)))
+
+(defun glop-set-surface-size (surface width height)
+  (glop:set-geometry surface
+                     (glop:window-x surface)
+                     (glop:window-y surface)
+                     width
+                     height)
+  surface)
+
+(defun glop-surface-fullscreen-p (surface)
+  (glop::window-fullscreen surface))
+
+(defun glop-set-surface-fullscreen (surface state)
+  (glop:set-fullscreen surface state))
+
+(defun glop-surface-title (surface)
+  (values (glop::window-title surface)))
+
+(defun glop-set-surface-title (surface title)
+  (glop:set-window-title surface title))
 
 ;;----------------------------------------------------------------------
 
@@ -97,6 +117,16 @@
    ;;
    (surface-size-function :initform #'glop-surface-size)
    ;;
-   (make-context-current-function :initform #'glop-make-current)))
+   (make-context-current-function :initform #'glop-make-current)
+   ;;
+   (set-surface-size-function :initform #'glop-set-surface-size)
+   ;;
+   (surface-fullscreen-p-function :initform #'glop-surface-fullscreen-p)
+   ;;
+   (set-surface-fullscreen-function :initform #'glop-set-surface-fullscreen)
+   ;;
+   (surface-title-function :initform #'glop-surface-title)
+   ;;
+   (set-surface-title-function :initform #'glop-set-surface-title)))
 
 (register-host 'glop-api)
