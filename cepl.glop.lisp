@@ -16,6 +16,8 @@
 
 ;;----------------------------------------------------------------------
 
+(defvar *core-context* t)
+
 (defun make-glop-context (surface version double-buffer
                           alpha-size depth-size stencil-size buffer-size
                           red-size green-size blue-size)
@@ -25,7 +27,8 @@
       (when version (cepl.context:split-float-version version))
     (let ((context (if version
                        (glop:create-gl-context
-                        surface :major major :minor minor :profile :core
+                        surface :major major :minor minor
+                        :profile (if *core-context* :core :compat)
                         :make-current t)
                        (search-for-context surface))))
       (assert context ()
@@ -34,14 +37,12 @@ Your machine must support at least GL 3.3")
       context)))
 
 (defun search-for-context (surface)
-  (let (context)
-    (loop :for (major minor profile) :in `((4 5 :core) (4 5 :compat)
-                                           (4 4 :core) (4 4 :compat)
-                                           (4 3 :core) (4 3 :compat)
-                                           (4 2 :core) (4 2 :compat)
-                                           (4 1 :core) (4 1 :compat)
-                                           (4 0 :core) (4 0 :compat)
-                                           (3 3 :core) (3 3 :compat))
+  (let ((profile (if *core-context* :core :compat))
+        context)
+    (loop :for (major minor profile) :in `((4 5 ,profile) (4 4 ,profile)
+                                           (4 3 ,profile) (4 2 ,profile)
+                                           (4 1 ,profile) (4 0 ,profile)
+                                           (3 3 ,profile))
        :until context
        :do (handler-case
                (setf context (glop:create-gl-context
