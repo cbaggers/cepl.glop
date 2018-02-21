@@ -8,11 +8,8 @@
     (push func listeners))
   (defun glop-step-v1 (win)
     (loop :for event := (glop:next-event win :blocking nil) :while event :do
-       (progn
-         (loop :for listener :in listeners :do
-            (funcall listener event))
-         (when (typep event 'glop:close-event)
-           (cepl:quit))))))
+       (loop :for listener :in listeners :do
+          (funcall listener event)))))
 
 ;;----------------------------------------------------------------------
 
